@@ -15,6 +15,7 @@ export default function Home() {
   const { publicKey, sendTransaction } = useWallet();
   const [txid, setTxid] = useState("");
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [title, setTitle] = useState("");
   const [rating, setRating] = useState(0);
@@ -23,7 +24,14 @@ export default function Home() {
 
   useEffect(() => {
     const fetchAccounts = async () => {
-      await fetchReviews(REVIEW_PROGRAM_ID, connection).then(setReviews);
+      setIsLoading(true);
+      try {
+        await fetchReviews(REVIEW_PROGRAM_ID, connection).then(setReviews);
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchAccounts();
   }, []);
@@ -39,6 +47,7 @@ export default function Home() {
       return;
     }
 
+    setIsLoading(true);
     const buffer = review.serialize();
     const transaction = new web3.Transaction();
 
@@ -72,45 +81,119 @@ export default function Home() {
 
     try {
       let txid = await sendTransaction(transaction, connection);
+      // Wait for confirmation to ensure the program has written state
+      await connection.confirmTransaction(txid, "confirmed");
       setTxid(
         `Transaction submitted: https://explorer.solana.com/tx/${txid}?cluster=devnet`
       );
+
+      // Clear form
+      setTitle("");
+      setRating(0);
+      setDescription("");
+      setLocation("");
+
+      // Refresh reviews after successful submission
+      const latest = await fetchReviews(REVIEW_PROGRAM_ID, connection);
+      setReviews(latest);
     } catch (e) {
       console.log(JSON.stringify(e));
       alert(JSON.stringify(e));
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 `}
-    >
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <AppBar />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Header with Wallet */}
+      <header className="relative z-50 p-4 border-b border-white/10">
+        <div className="container mx-auto flex items-center justify-between">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+            Solana Reviews
+          </h1>
+          <AppBar />
+        </div>
+      </header>
 
-      <div className="after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <ReviewForm
-          title={title}
-          description={description}
-          rating={rating}
-          location={location}
-          setTitle={setTitle}
-          setDescription={setDescription}
-          setRating={setRating}
-          setLocation={setLocation}
-          handleSubmit={handleSubmit}
-        />
-      </div>
+      {/* Main Content - Two Column Layout */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-120px)]">
+          {/* Left Column - Form */}
+          <div className="space-y-6">
+            <div className="glass-card p-6">
+              <h2 className="text-xl font-semibold text-white mb-4">
+                Create New Review
+              </h2>
+              <ReviewForm
+                title={title}
+                description={description}
+                rating={rating}
+                location={location}
+                setTitle={setTitle}
+                setDescription={setDescription}
+                setRating={setRating}
+                setLocation={setLocation}
+                handleSubmit={handleSubmit}
+              />
+            </div>
 
-      {txid && <div>{txid}</div>}
+            {/* Transaction Status */}
+            {txid && (
+              <div className="glass-card p-4 border-green-500/30">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <p className="text-green-400 font-medium">
+                    Transaction Successful!
+                  </p>
+                </div>
+                <a
+                  href={txid.replace("Transaction submitted: ", "")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 underline text-sm mt-2 block"
+                >
+                  View on Solana Explorer →
+                </a>
+              </div>
+            )}
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-3 lg:text-left">
-        {reviews &&
-          reviews.map((review) => {
-            return <ReviewCard key={review.title} review={review} />;
-          })}
+            {/* Loading State */}
+            {isLoading && (
+              <div className="glass-card p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-purple-400">Processing...</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Reviews */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-white">
+              Community Reviews
+            </h2>
+
+            <div className="h-full overflow-y-auto space-y-4 pr-2">
+              {reviews.length === 0 && !isLoading ? (
+                <div className="glass-card p-8 text-center">
+                  <h3 className="text-lg font-medium text-gray-300 mb-2">
+                    No Reviews Yet
+                  </h3>
+                  <p className="text-gray-400">
+                    Be the first to share your experience!
+                  </p>
+                </div>
+              ) : (
+                reviews.map((review) => (
+                  <ReviewCard key={review.title} review={review} />
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

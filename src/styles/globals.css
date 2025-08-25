@@ -3,25 +3,191 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 10, 10, 23;
+  --background-end-rgb: 30, 30, 60;
+  --accent-primary: 147, 51, 234;
+  --accent-secondary: 59, 130, 246;
+  --accent-tertiary: 16, 185, 129;
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
+  background: radial-gradient(
+    ellipse at top,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+  min-height: 100vh;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Futuristic glass morphism utilities */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+}
+
+.glass-card {
   background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Animated gradient backgrounds */
+.gradient-bg {
+  background: linear-gradient(
+    -45deg,
+    rgb(var(--accent-primary)),
+    rgb(var(--accent-secondary)),
+    rgb(var(--accent-tertiary)),
+    rgb(var(--accent-primary))
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Simple hover effects - no excessive movement */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Glowing effects - reduced intensity */
+.glow {
+  box-shadow: 0 0 10px rgba(var(--accent-primary), 0.3);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 15px rgba(var(--accent-primary), 0.5);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    45deg,
+    rgb(var(--accent-primary)),
+    rgb(var(--accent-secondary))
+  );
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    45deg,
+    rgb(var(--accent-secondary)),
+    rgb(var(--accent-tertiary))
+  );
+}
+
+/* Wallet Adapter overrides: MAXIMUM z-index + dark glass theme */
+.wallet-adapter-modal,
+.wallet-adapter-modal-wrapper,
+.wallet-adapter-modal-container,
+.wallet-adapter-dropdown,
+.wallet-adapter-dropdown-list {
+  z-index: 99999 !important;
+}
+
+.wallet-adapter-modal-wrapper {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 99999 !important;
+}
+
+.wallet-adapter-modal-container {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 16px !important;
+  color: #fff !important;
+}
+
+.wallet-adapter-button,
+.wallet-adapter-button-trigger {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--accent-primary), 1),
+    rgba(var(--accent-secondary), 1)
+  ) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35) !important;
+}
+
+.wallet-adapter-dropdown-list {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+}
+
+.wallet-adapter-dropdown-list-item {
+  color: #e5e7eb !important;
+}
+
+/* Tightened, themed inputs */
+.input-dark {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.input-dark::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+.input-dark:focus {
+  border-color: rgba(147, 51, 234, 0.6);
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.25);
+  background: rgba(255, 255, 255, 0.08);
 }
